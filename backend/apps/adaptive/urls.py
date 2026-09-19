@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .views import (
+    AdaptiveActivityAnswerView,
     AdaptiveLearningSessionCreateView,
     AdaptiveProfileView,
     AdaptiveRecommendationCompleteView,
@@ -34,5 +35,10 @@ urlpatterns = [
         'learning-session/',
         AdaptiveLearningSessionCreateView.as_view(),
         name='adaptive-learning-session',
+    ),
+    path(
+        'activities/<int:pk>/answer/',
+        AdaptiveActivityAnswerView.as_view(),
+        name='adaptive-activity-answer',
     ),
 ]
