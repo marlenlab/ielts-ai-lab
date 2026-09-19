@@ -39,4 +39,9 @@ urlpatterns = [
         TokenRefreshView.as_view(),
         name='token_refresh',
     ),
+    path(
+    'api/v1/questions/',
+    include('apps.questions.urls'
+            ),
+),
 ]

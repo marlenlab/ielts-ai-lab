@@ -1,3 +1,65 @@
 from django.db import models
 
-# Create your models here.
+
+class Question(models.Model):
+    class QuestionType(models.TextChoices):
+        MULTIPLE_CHOICE = 'MULTIPLE_CHOICE', 'Multiple Choice'
+        TRUE_FALSE_NOT_GIVEN = (
+            'TRUE_FALSE_NOT_GIVEN',
+            'True / False / Not Given',
+        )
+        YES_NO_NOT_GIVEN = (
+            'YES_NO_NOT_GIVEN',
+            'Yes / No / Not Given',
+        )
+        MATCHING = 'MATCHING', 'Matching'
+        FILL_GAP = 'FILL_GAP', 'Fill in the Gap'
+
+    class Skill(models.TextChoices):
+        LISTENING = 'LISTENING', 'Listening'
+        READING = 'READING', 'Reading'
+
+    skill = models.CharField(
+        max_length=20,
+        choices=Skill.choices,
+    )
+
+    question_type = models.CharField(
+        max_length=30,
+        choices=QuestionType.choices,
+    )
+
+    text = models.TextField()
+
+    options = models.JSONField(
+        default=list,
+        blank=True,
+    )
+
+    correct_answer = models.TextField()
+
+    points = models.PositiveIntegerField(
+        default=1,
+    )
+
+    order = models.PositiveIntegerField(
+        default=1,
+    )
+
+    explanation = models.TextField(
+        blank=True,
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True,
+    )
+
+    class Meta:
+        ordering = ['skill', 'order', 'id']
+
+    def __str__(self):
+        return f'{self.skill} - {self.question_type} - {self.id}'
