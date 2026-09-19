@@ -135,6 +135,30 @@ class ExamAPITests(APITestCase):
         )
 
     def test_submit_exam(self):
+        ExamSection.objects.create(
+            exam=self.exam,
+            section_type=ExamSection.SectionType.LISTENING,
+            status=ExamSection.Status.SUBMITTED,
+        )
+
+        ExamSection.objects.create(
+            exam=self.exam,
+            section_type=ExamSection.SectionType.READING,
+            status=ExamSection.Status.SUBMITTED,
+        )
+
+        ExamSection.objects.create(
+            exam=self.exam,
+            section_type=ExamSection.SectionType.WRITING,
+            status=ExamSection.Status.SUBMITTED,
+        )
+
+        ExamSection.objects.create(
+            exam=self.exam,
+            section_type=ExamSection.SectionType.SPEAKING,
+            status=ExamSection.Status.SUBMITTED,
+        )
+
         self.exam.status = Exam.Status.IN_PROGRESS
         self.exam.save(
             update_fields=['status'],
@@ -151,7 +175,7 @@ class ExamAPITests(APITestCase):
 
         self.assertEqual(
             response.data['status'],
-            'SUBMITTED',
+            Exam.Status.SUBMITTED,
         )
 
     def test_exam_result(self):

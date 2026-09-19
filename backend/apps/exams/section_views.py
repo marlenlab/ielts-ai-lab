@@ -4,7 +4,8 @@ from rest_framework import generics, permissions
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
-from .models import ExamSection
+from .models import Exam, ExamSection
+from .services import complete_exam_if_ready
 
 
 class ExamSectionStartView(generics.GenericAPIView):
@@ -19,9 +20,25 @@ class ExamSectionStartView(generics.GenericAPIView):
     def post(self, request, *args, **kwargs):
         section = self.get_object()
 
-        if section.exam.status != section.exam.Status.IN_PROGRESS:
+        exam = section.exam
+
+        if exam.status != Exam.Status.IN_PROGRESS:
             raise PermissionDenied(
                 'The exam must be in progress.'
+            )
+
+        if exam.expire_if_needed():
+            raise PermissionDenied(
+                'The exam time has expired.'
+            )
+
+        active_sections = exam.sections.filter(
+            status=ExamSection.Status.IN_PROGRESS,
+        )
+
+        if active_sections.exists():
+            raise PermissionDenied(
+                'Another section is already in progress.'
             )
 
         if not section.can_start():
@@ -61,7 +78,14 @@ class ExamSectionSubmitView(generics.GenericAPIView):
     def post(self, request, *args, **kwargs):
         section = self.get_object()
 
-        if section.exam.status != section.exam.Status.IN_PROGRESS:
+        exam = section.exam
+
+        if exam.expire_if_needed():
+            raise PermissionDenied(
+                'The exam time has expired.'
+            )
+
+        if exam.status != Exam.Status.IN_PROGRESS:
             raise PermissionDenied(
                 'The exam must be in progress.'
             )
@@ -77,10 +101,24 @@ class ExamSectionSubmitView(generics.GenericAPIView):
             ],
         )
 
-        return Response({
+        exam_completed = complete_exam_if_ready(exam)
+
+        response_data = {
             'id': section.id,
             'exam_id': section.exam_id,
             'section_type': section.section_type,
             'status': section.status,
             'submitted_at': section.submitted_at,
-        })
+            'exam_status': (
+                Exam.Status.COMPLETED
+                if exam_completed
+                else exam.status
+            ),
+        }
+
+        if exam_completed:
+            response_data['exam_completed_at'] = (
+                exam.completed_at
+            )
+
+        return Response(response_data)
