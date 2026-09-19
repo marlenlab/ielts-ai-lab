@@ -41,11 +41,7 @@ class LearningSession(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return (
-            f'{self.user.username} - '
-            f'{self.session_type} - '
-            f'{self.status}'
-        )
+        return f'{self.user.username} - {self.session_type}'
 
 
 class LearningActivity(models.Model):
@@ -68,18 +64,42 @@ class LearningActivity(models.Model):
     )
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
+
     target_count = models.PositiveIntegerField(default=1)
     completed_count = models.PositiveIntegerField(default=0)
+
     correct_count = models.PositiveIntegerField(default=0)
     incorrect_count = models.PositiveIntegerField(default=0)
     points_earned = models.PositiveIntegerField(default=0)
-    order = models.PositiveIntegerField(default=1)
-    completed_at = models.DateTimeField(null=True, blank=True)
+
+    order = models.PositiveIntegerField()
+
+    # Concrete adaptive content selected for this activity.
+    # Example:
+    # {
+    #     "items": [
+    #         {
+    #             "id": 12,
+    #             "word": "allocate",
+    #             "definition": "...",
+    #             "example_sentence": "..."
+    #         }
+    #     ]
+    # }
+    content = models.JSONField(
+        default=dict,
+        blank=True,
+    )
+
+    completed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['session', 'order', 'id']
+        ordering = ['order', 'id']
         constraints = [
             models.UniqueConstraint(
                 fields=['session', 'order'],

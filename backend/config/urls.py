@@ -74,4 +74,10 @@ urlpatterns = [
         include('apps.learning.urls')
     ),
 
+
+    path(
+        'api/v1/adaptive/',
+        include('apps.adaptive.urls'),
+    ),
+
 ]

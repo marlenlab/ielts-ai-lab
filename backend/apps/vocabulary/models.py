@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from decimal import Decimal
 
 
 class VocabularyWord(models.Model):
@@ -109,7 +110,7 @@ class VocabularyProgress(models.Model):
     mastery_score = models.DecimalField(
         max_digits=5,
         decimal_places=2,
-        default=0,
+        default=Decimal('0.00'),
     )
 
     last_reviewed_at = models.DateTimeField(
