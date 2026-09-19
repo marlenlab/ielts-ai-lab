@@ -104,3 +104,29 @@ class ExamAPITests(APITestCase):
         )
 
         self.assertEqual(response.status_code, 404)
+
+    def test_start_exam(self):
+        exam = Exam.objects.create(
+            user=self.user,
+            exam_type='FULL_MOCK',
+        )
+
+        response = self.client.post(
+            f'/api/v1/exams/{exam.id}/start/',
+            {},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.data['status'],
+            'IN_PROGRESS',
+        )
+
+        exam.refresh_from_db()
+
+        self.assertEqual(
+            exam.status,
+            Exam.Status.IN_PROGRESS,
+        )
+        self.assertIsNotNone(exam.started_at)

@@ -1,6 +1,7 @@
 from django.shortcuts import get_object_or_404
 
 from rest_framework import generics, permissions
+from rest_framework.response import Response
 
 from .models import Exam, ExamSection
 from .serializers import ExamSerializer, ExamSectionSerializer
@@ -38,3 +39,33 @@ class ExamSectionListCreateView(generics.ListCreateAPIView):
         )
 
         serializer.save(exam=exam)
+
+
+class ExamStartView(generics.GenericAPIView):
+    serializer_class = ExamSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Exam.objects.filter(
+            user=self.request.user,
+            status=Exam.Status.NOT_STARTED,
+        )
+
+    def post(self, request, *args, **kwargs):
+        exam = self.get_object()
+
+        from django.utils import timezone
+
+        exam.status = Exam.Status.IN_PROGRESS
+        exam.started_at = timezone.now()
+        exam.save(
+            update_fields=[
+                'status',
+                'started_at',
+                'updated_at',
+            ]
+        )
+
+        serializer = self.get_serializer(exam)
+
+        return Response(serializer.data)
