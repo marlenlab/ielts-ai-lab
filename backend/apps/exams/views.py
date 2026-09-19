@@ -85,14 +85,33 @@ class ExamSubmitView(generics.GenericAPIView):
 
         from django.utils import timezone
 
+        if exam.is_expired():
+            exam.status = Exam.Status.SUBMITTED
+            exam.submitted_at = timezone.now()
+            exam.save(
+                update_fields=[
+                    'status',
+                    'submitted_at',
+                    'updated_at',
+                ],
+            )
+
+            serializer = self.get_serializer(exam)
+
+            return Response(
+                serializer.data,
+                status=200,
+            )
+
         exam.status = Exam.Status.SUBMITTED
         exam.submitted_at = timezone.now()
+
         exam.save(
             update_fields=[
                 'status',
                 'submitted_at',
                 'updated_at',
-            ]
+            ],
         )
 
         serializer = self.get_serializer(exam)

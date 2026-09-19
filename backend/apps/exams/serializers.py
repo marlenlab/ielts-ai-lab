@@ -4,11 +4,13 @@ from .models import Exam, ExamSection
 
 
 class ExamSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Exam
         fields = (
             'id',
             'exam_type',
+            'duration_minutes',
             'status',
             'started_at',
             'submitted_at',
@@ -18,6 +20,7 @@ class ExamSerializer(serializers.ModelSerializer):
         )
         read_only_fields = (
             'id',
+            'duration_minutes',
             'status',
             'started_at',
             'submitted_at',
@@ -28,6 +31,7 @@ class ExamSerializer(serializers.ModelSerializer):
 
 
 class ExamSectionSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = ExamSection
         fields = (

@@ -1,6 +1,8 @@
+from datetime import timedelta
+
 from django.conf import settings
 from django.db import models
-
+from django.utils import timezone
 
 class Exam(models.Model):
 
@@ -28,6 +30,22 @@ class Exam(models.Model):
         choices=ExamType.choices,
         default=ExamType.FULL_MOCK,
     )
+    duration_minutes = models.PositiveIntegerField(
+        default=165,
+    )
+    def is_expired(self):
+        if self.status != self.Status.IN_PROGRESS:
+            return False
+
+        if not self.started_at:
+            return False
+
+        end_time = (
+            self.started_at
+            + timedelta(minutes=self.duration_minutes)
+        )
+
+        return timezone.now() >= end_time
 
     status = models.CharField(
         max_length=20,

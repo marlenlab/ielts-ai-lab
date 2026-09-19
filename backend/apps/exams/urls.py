@@ -1,5 +1,5 @@
 from django.urls import path
-
+from .timer_views import ExamTimerView
 from .result_views import ExamResultView
 from .views import (
     ExamListCreateView,
@@ -34,5 +34,10 @@ urlpatterns = [
         '<int:pk>/result/',
         ExamResultView.as_view(),
         name='exam-result',
+    ),
+    path(
+        '<int:pk>/timer/',
+        ExamTimerView.as_view(),
+        name='exam-timer',
     ),
 ]

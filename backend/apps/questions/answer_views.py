@@ -31,6 +31,11 @@ class AnswerListCreateView(generics.ListCreateAPIView):
                 'You can only answer an exam that is in progress.'
             )
 
+        if exam.is_expired():
+            raise PermissionDenied(
+                'The exam time has expired.'
+            )
+
         if question.section.exam_id != exam.id:
             raise PermissionDenied(
                 'Question does not belong to this exam.'

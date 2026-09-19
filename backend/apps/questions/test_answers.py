@@ -1,4 +1,7 @@
+from datetime import timedelta
+
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 
 from rest_framework.test import APITestCase
 
@@ -153,6 +156,7 @@ class AnswerAPITests(APITestCase):
 
     def test_cannot_answer_not_started_exam(self):
         self.exam.status = Exam.Status.NOT_STARTED
+
         self.exam.save(
             update_fields=['status'],
         )
@@ -170,4 +174,36 @@ class AnswerAPITests(APITestCase):
         self.assertEqual(
             response.status_code,
             403,
+        )
+
+    def test_cannot_answer_expired_exam(self):
+        self.exam.started_at = (
+            timezone.now()
+            - timedelta(
+                minutes=self.exam.duration_minutes + 1,
+            )
+        )
+
+        self.exam.save(
+            update_fields=['started_at'],
+        )
+
+        response = self.client.post(
+            '/api/v1/questions/answers/',
+            {
+                'exam': self.exam.id,
+                'question': self.question.id,
+                'answer': '8:30',
+            },
+            format='json',
+        )
+
+        self.assertEqual(
+            response.status_code,
+            403,
+        )
+
+        self.assertEqual(
+            response.data['detail'],
+            'The exam time has expired.',
         )
