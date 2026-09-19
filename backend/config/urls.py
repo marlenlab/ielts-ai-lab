@@ -14,20 +14,21 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
-from django.urls import include, path
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
-)
+"""
+URL configuration for config project.
 
+The `urlpatterns` list routes URLs to views.
+"""
 
 from django.contrib import admin
 from django.urls import include, path
 
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path(
+        'admin/',
+        admin.site.urls,
+    ),
 
     path(
         'api/v1/auth/',
@@ -35,7 +36,7 @@ urlpatterns = [
     ),
 
     path(
-        'api/v1/profiles/',
+        'api/v1/profile/',
         include('apps.profiles.urls'),
     ),
 
@@ -66,18 +67,21 @@ urlpatterns = [
 
     path(
         'api/v1/grammar/',
-        include('apps.grammar.urls')
+        include('apps.grammar.urls'),
     ),
 
     path(
         'api/v1/learning/',
-        include('apps.learning.urls')
+        include('apps.learning.urls'),
     ),
-
 
     path(
         'api/v1/adaptive/',
         include('apps.adaptive.urls'),
     ),
 
+    path(
+        'api/v1/analytics/',
+        include('apps.analytics.urls'),
+    ),
 ]
