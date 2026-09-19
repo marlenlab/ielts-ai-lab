@@ -1,11 +1,10 @@
-from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
 from rest_framework import generics, permissions
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
-from .models import Exam, ExamSection
+from .models import ExamSection
 
 
 class ExamSectionStartView(generics.GenericAPIView):
@@ -20,9 +19,14 @@ class ExamSectionStartView(generics.GenericAPIView):
     def post(self, request, *args, **kwargs):
         section = self.get_object()
 
-        if section.exam.status != Exam.Status.IN_PROGRESS:
+        if section.exam.status != section.exam.Status.IN_PROGRESS:
             raise PermissionDenied(
                 'The exam must be in progress.'
+            )
+
+        if not section.can_start():
+            raise PermissionDenied(
+                'This section cannot be started yet.'
             )
 
         section.status = ExamSection.Status.IN_PROGRESS
@@ -57,7 +61,7 @@ class ExamSectionSubmitView(generics.GenericAPIView):
     def post(self, request, *args, **kwargs):
         section = self.get_object()
 
-        if section.exam.status != Exam.Status.IN_PROGRESS:
+        if section.exam.status != section.exam.Status.IN_PROGRESS:
             raise PermissionDenied(
                 'The exam must be in progress.'
             )

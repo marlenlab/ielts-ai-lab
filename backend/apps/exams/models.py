@@ -138,6 +138,13 @@ class ExamSection(models.Model):
         PROCESSING = 'PROCESSING', 'Processing'
         COMPLETED = 'COMPLETED', 'Completed'
 
+    SECTION_ORDER = {
+        SectionType.LISTENING: 1,
+        SectionType.READING: 2,
+        SectionType.WRITING: 3,
+        SectionType.SPEAKING: 4,
+    }
+
     exam = models.ForeignKey(
         Exam,
         on_delete=models.CASCADE,
@@ -187,6 +194,43 @@ class ExamSection(models.Model):
 
     class Meta:
         ordering = ['id']
+
+    def can_start(self):
+        if self.status != self.Status.NOT_STARTED:
+            return False
+
+        if self.exam.status != Exam.Status.IN_PROGRESS:
+            return False
+
+        if self.exam.exam_type != Exam.ExamType.FULL_MOCK:
+            return True
+
+        current_order = self.SECTION_ORDER[self.section_type]
+
+        if current_order == 1:
+            return True
+
+        previous_types = [
+            section_type
+            for section_type, order
+            in self.SECTION_ORDER.items()
+            if order < current_order
+        ]
+
+        previous_sections = self.exam.sections.filter(
+            section_type__in=previous_types,
+        )
+
+        if previous_sections.count() != len(previous_types):
+            return False
+
+        return all(
+            section.status in (
+                self.Status.SUBMITTED,
+                self.Status.COMPLETED,
+            )
+            for section in previous_sections
+        )
 
     def __str__(self):
         return f'{self.exam} - {self.section_type}'
