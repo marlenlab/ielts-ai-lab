@@ -54,3 +54,65 @@ class Exam(models.Model):
 
     def __str__(self):
         return f'{self.user.username} - {self.exam_type}'
+
+class ExamSection(models.Model):
+    class SectionType(models.TextChoices):
+        LISTENING = 'LISTENING', 'Listening'
+        READING = 'READING', 'Reading'
+        WRITING = 'WRITING', 'Writing'
+        SPEAKING = 'SPEAKING', 'Speaking'
+
+    class Status(models.TextChoices):
+        NOT_STARTED = 'NOT_STARTED', 'Not Started'
+        IN_PROGRESS = 'IN_PROGRESS', 'In Progress'
+        SUBMITTED = 'SUBMITTED', 'Submitted'
+        PROCESSING = 'PROCESSING', 'Processing'
+        COMPLETED = 'COMPLETED', 'Completed'
+
+    exam = models.ForeignKey(
+        Exam,
+        on_delete=models.CASCADE,
+        related_name='sections',
+    )
+
+    section_type = models.CharField(
+        max_length=20,
+        choices=SectionType.choices,
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.NOT_STARTED,
+    )
+
+    started_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    submitted_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    completed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    score = models.DecimalField(
+        max_digits=4,
+        decimal_places=1,
+        null=True,
+        blank=True,
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['id']
+
+    def __str__(self):
+        return f'{self.exam} - {self.section_type}'

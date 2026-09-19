@@ -1,7 +1,9 @@
+from django.shortcuts import get_object_or_404
+
 from rest_framework import generics, permissions
 
-from .models import Exam
-from .serializers import ExamSerializer
+from .models import Exam, ExamSection
+from .serializers import ExamSerializer, ExamSectionSerializer
 
 
 class ExamListCreateView(generics.ListCreateAPIView):
@@ -15,3 +17,24 @@ class ExamListCreateView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+
+class ExamSectionListCreateView(generics.ListCreateAPIView):
+    serializer_class = ExamSectionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return ExamSection.objects.filter(
+            exam__user=self.request.user
+        ).order_by('id')
+
+    def perform_create(self, serializer):
+        exam_id = self.kwargs['exam_id']
+
+        exam = get_object_or_404(
+            Exam,
+            id=exam_id,
+            user=self.request.user,
+        )
+
+        serializer.save(exam=exam)
