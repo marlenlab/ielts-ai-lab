@@ -4,6 +4,7 @@ from .views import (
     ExamListCreateView,
     ExamSectionListCreateView,
     ExamStartView,
+    ExamSubmitView,
 )
 
 
@@ -22,5 +23,10 @@ urlpatterns = [
         '<int:pk>/start/',
         ExamStartView.as_view(),
         name='exam-start',
+    ),
+    path(
+        '<int:pk>/submit/',
+        ExamSubmitView.as_view(),
+        name='exam-submit',
     ),
 ]

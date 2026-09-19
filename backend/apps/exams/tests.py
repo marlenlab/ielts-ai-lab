@@ -130,3 +130,30 @@ class ExamAPITests(APITestCase):
             Exam.Status.IN_PROGRESS,
         )
         self.assertIsNotNone(exam.started_at)
+
+    def test_submit_exam(self):
+        exam = Exam.objects.create(
+            user=self.user,
+            exam_type='FULL_MOCK',
+            status=Exam.Status.IN_PROGRESS,
+        )
+
+        response = self.client.post(
+            f'/api/v1/exams/{exam.id}/submit/',
+            {},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.data['status'],
+            'SUBMITTED',
+        )
+
+        exam.refresh_from_db()
+
+        self.assertEqual(
+            exam.status,
+            Exam.Status.SUBMITTED,
+        )
+        self.assertIsNotNone(exam.submitted_at)

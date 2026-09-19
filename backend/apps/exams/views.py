@@ -69,3 +69,32 @@ class ExamStartView(generics.GenericAPIView):
         serializer = self.get_serializer(exam)
 
         return Response(serializer.data)
+
+class ExamSubmitView(generics.GenericAPIView):
+    serializer_class = ExamSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Exam.objects.filter(
+            user=self.request.user,
+            status=Exam.Status.IN_PROGRESS,
+        )
+
+    def post(self, request, *args, **kwargs):
+        exam = self.get_object()
+
+        from django.utils import timezone
+
+        exam.status = Exam.Status.SUBMITTED
+        exam.submitted_at = timezone.now()
+        exam.save(
+            update_fields=[
+                'status',
+                'submitted_at',
+                'updated_at',
+            ]
+        )
+
+        serializer = self.get_serializer(exam)
+
+        return Response(serializer.data)
