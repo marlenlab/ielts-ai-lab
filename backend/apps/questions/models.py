@@ -69,7 +69,13 @@ class Question(models.Model):
     )
 
     class Meta:
-        ordering = ['skill', 'order', 'id']
+        ordering = ['section', 'order', 'id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['section', 'order'],
+                name='unique_question_order_per_section',
+            ),
+        ]
 
     def __str__(self):
         return (
@@ -77,3 +83,5 @@ class Question(models.Model):
             f'{self.question_type} - '
             f'{self.id}'
         )
+
+from .answer import Answer
