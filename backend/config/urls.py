@@ -22,26 +22,56 @@ from rest_framework_simplejwt.views import (
 )
 
 
+from django.contrib import admin
+from django.urls import include, path
+
+
 urlpatterns = [
     path('admin/', admin.site.urls),
 
-    path('api/v1/auth/', include('apps.users.urls')),
-    path('api/v1/profile/', include('apps.profiles.urls')),
-    path('api/v1/exams/', include('apps.exams.urls')),
     path(
-        'api/v1/auth/token/',
-        TokenObtainPairView.as_view(),
-        name='token_obtain_pair',
+        'api/v1/auth/',
+        include('apps.users.urls'),
     ),
 
     path(
-        'api/v1/auth/token/refresh/',
-        TokenRefreshView.as_view(),
-        name='token_refresh',
+        'api/v1/profiles/',
+        include('apps.profiles.urls'),
     ),
+
     path(
-    'api/v1/questions/',
-    include('apps.questions.urls'
-            ),
-),
+        'api/v1/exams/',
+        include('apps.exams.urls'),
+    ),
+
+    path(
+        'api/v1/questions/',
+        include('apps.questions.urls'),
+    ),
+
+    path(
+        'api/v1/writing/',
+        include('apps.writing.urls'),
+    ),
+
+    path(
+        'api/v1/speaking/',
+        include('apps.speaking.urls'),
+    ),
+
+    path(
+        'api/v1/vocabulary/',
+        include('apps.vocabulary.urls'),
+    ),
+
+    path(
+        'api/v1/grammar/',
+        include('apps.grammar.urls')
+    ),
+
+    path(
+        'api/v1/learning/',
+        include('apps.learning.urls')
+    ),
+
 ]
