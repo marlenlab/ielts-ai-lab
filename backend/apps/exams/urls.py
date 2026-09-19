@@ -1,5 +1,6 @@
 from django.urls import path
 
+from .result_views import ExamResultView
 from .views import (
     ExamListCreateView,
     ExamSectionListCreateView,
@@ -28,5 +29,10 @@ urlpatterns = [
         '<int:pk>/submit/',
         ExamSubmitView.as_view(),
         name='exam-submit',
+    ),
+    path(
+        '<int:pk>/result/',
+        ExamResultView.as_view(),
+        name='exam-result',
     ),
 ]

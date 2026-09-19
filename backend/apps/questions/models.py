@@ -4,17 +4,22 @@ from apps.exams.models import ExamSection
 
 
 class Question(models.Model):
+
     class QuestionType(models.TextChoices):
         MULTIPLE_CHOICE = 'MULTIPLE_CHOICE', 'Multiple Choice'
+
         TRUE_FALSE_NOT_GIVEN = (
             'TRUE_FALSE_NOT_GIVEN',
             'True / False / Not Given',
         )
+
         YES_NO_NOT_GIVEN = (
             'YES_NO_NOT_GIVEN',
             'Yes / No / Not Given',
         )
+
         MATCHING = 'MATCHING', 'Matching'
+
         FILL_GAP = 'FILL_GAP', 'Fill in the Gap'
 
     class Skill(models.TextChoices):
@@ -70,6 +75,7 @@ class Question(models.Model):
 
     class Meta:
         ordering = ['section', 'order', 'id']
+
         constraints = [
             models.UniqueConstraint(
                 fields=['section', 'order'],
@@ -83,5 +89,6 @@ class Question(models.Model):
             f'{self.question_type} - '
             f'{self.id}'
         )
+
 
 from .answer import Answer

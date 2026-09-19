@@ -3,6 +3,7 @@ from django.db import models
 
 
 class Exam(models.Model):
+
     class ExamType(models.TextChoices):
         FULL_MOCK = 'FULL_MOCK', 'Full Mock'
         DIAGNOSTIC = 'DIAGNOSTIC', 'Diagnostic'
@@ -49,13 +50,43 @@ class Exam(models.Model):
         blank=True,
     )
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True,
+    )
+
+    def calculate_score(self):
+        from apps.questions.answer import Answer
+
+        answers = Answer.objects.filter(
+            exam=self,
+        )
+
+        total_points = sum(
+            answer.question.points
+            for answer in answers
+        )
+
+        earned_points = sum(
+            answer.points_earned
+            for answer in answers
+        )
+
+        return {
+            'total_points': total_points,
+            'earned_points': earned_points,
+            'answered_questions': answers.count(),
+        }
 
     def __str__(self):
         return f'{self.user.username} - {self.exam_type}'
 
+
 class ExamSection(models.Model):
+
     class SectionType(models.TextChoices):
         LISTENING = 'LISTENING', 'Listening'
         READING = 'READING', 'Reading'
@@ -108,8 +139,13 @@ class ExamSection(models.Model):
         blank=True,
     )
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True,
+    )
 
     class Meta:
         ordering = ['id']
