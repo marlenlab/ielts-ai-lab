@@ -1,6 +1,11 @@
 from django.urls import path
-from .timer_views import ExamTimerView
+
 from .result_views import ExamResultView
+from .section_views import (
+    ExamSectionStartView,
+    ExamSectionSubmitView,
+)
+from .timer_views import ExamTimerView
 from .views import (
     ExamListCreateView,
     ExamSectionListCreateView,
@@ -31,13 +36,23 @@ urlpatterns = [
         name='exam-submit',
     ),
     path(
+        '<int:pk>/timer/',
+        ExamTimerView.as_view(),
+        name='exam-timer',
+    ),
+    path(
         '<int:pk>/result/',
         ExamResultView.as_view(),
         name='exam-result',
     ),
     path(
-        '<int:pk>/timer/',
-        ExamTimerView.as_view(),
-        name='exam-timer',
+        'sections/<int:pk>/start/',
+        ExamSectionStartView.as_view(),
+        name='exam-section-start',
+    ),
+    path(
+        'sections/<int:pk>/submit/',
+        ExamSectionSubmitView.as_view(),
+        name='exam-section-submit',
     ),
 ]

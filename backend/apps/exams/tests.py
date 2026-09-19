@@ -10,7 +10,6 @@ from apps.questions.models import Question
 
 from .models import Exam, ExamSection
 
-
 User = get_user_model()
 
 
@@ -337,4 +336,88 @@ class ExamAPITests(APITestCase):
 
         self.assertTrue(
             response.data['expired'],
+        )
+
+    def test_start_exam_section(self):
+        section = ExamSection.objects.create(
+            exam=self.exam,
+            section_type='LISTENING',
+        )
+
+        self.exam.status = Exam.Status.IN_PROGRESS
+        self.exam.started_at = timezone.now()
+
+        self.exam.save(
+            update_fields=[
+                'status',
+                'started_at',
+            ],
+        )
+
+        response = self.client.post(
+            f'/api/v1/exams/sections/{section.id}/start/'
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        self.assertEqual(
+            response.data['status'],
+            'IN_PROGRESS',
+        )
+
+        section.refresh_from_db()
+
+        self.assertEqual(
+            section.status,
+            ExamSection.Status.IN_PROGRESS,
+        )
+
+        self.assertIsNotNone(
+            section.started_at,
+        )
+
+    def test_submit_exam_section(self):
+        section = ExamSection.objects.create(
+            exam=self.exam,
+            section_type='READING',
+            status=ExamSection.Status.IN_PROGRESS,
+            started_at=timezone.now(),
+        )
+
+        self.exam.status = Exam.Status.IN_PROGRESS
+        self.exam.started_at = timezone.now()
+
+        self.exam.save(
+            update_fields=[
+                'status',
+                'started_at',
+            ],
+        )
+
+        response = self.client.post(
+            f'/api/v1/exams/sections/{section.id}/submit/'
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        self.assertEqual(
+            response.data['status'],
+            'SUBMITTED',
+        )
+
+        section.refresh_from_db()
+
+        self.assertEqual(
+            section.status,
+            ExamSection.Status.SUBMITTED,
+        )
+
+        self.assertIsNotNone(
+            section.submitted_at,
         )
