@@ -1,5 +1,7 @@
+from django.db import IntegrityError
+
 from rest_framework import generics, permissions
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 
 from .answer import Answer
 from .answer_serializers import AnswerSerializer
@@ -36,15 +38,50 @@ class AnswerListCreateView(generics.ListCreateAPIView):
                 'The exam time has expired.'
             )
 
-        if question.section.exam_id != exam.id:
+        section = question.section
+
+        if section is None:
+            raise PermissionDenied(
+                'Question is not assigned to an exam section.'
+            )
+
+        if section.exam_id != exam.id:
             raise PermissionDenied(
                 'Question does not belong to this exam.'
             )
 
-        correct = (
-            serializer.validated_data['answer'].strip().lower()
-            == question.correct_answer.strip().lower()
+        if section.status != section.Status.IN_PROGRESS:
+            raise PermissionDenied(
+                'You can only answer questions from the active section.'
+            )
+
+        active_sections = exam.sections.filter(
+            status=section.Status.IN_PROGRESS,
         )
+
+        if active_sections.count() != 1:
+            raise PermissionDenied(
+                'There must be exactly one active exam section.'
+            )
+
+        if active_sections.first().id != section.id:
+            raise PermissionDenied(
+                'You can only answer questions from the active section.'
+            )
+
+        submitted_answer = (
+            serializer.validated_data['answer']
+            .strip()
+            .lower()
+        )
+
+        correct_answer = (
+            question.correct_answer
+            .strip()
+            .lower()
+        )
+
+        correct = submitted_answer == correct_answer
 
         points_earned = (
             question.points
@@ -52,7 +89,19 @@ class AnswerListCreateView(generics.ListCreateAPIView):
             else 0
         )
 
-        serializer.save(
-            is_correct=correct,
-            points_earned=points_earned,
-        )
+        try:
+            answer, created = Answer.objects.update_or_create(
+                exam=exam,
+                question=question,
+                defaults={
+                    'answer': serializer.validated_data['answer'],
+                    'is_correct': correct,
+                    'points_earned': points_earned,
+                },
+            )
+        except IntegrityError:
+            raise ValidationError(
+                'Unable to save this answer.'
+            )
+
+        serializer.instance = answer

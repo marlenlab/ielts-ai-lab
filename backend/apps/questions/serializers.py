@@ -26,8 +26,37 @@ class QuestionSerializer(serializers.ModelSerializer):
             'created_at',
             'updated_at',
         )
+
         read_only_fields = (
             'id',
             'created_at',
             'updated_at',
+        )
+
+
+class StudentQuestionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Question
+        fields = (
+            'id',
+            'section',
+            'skill',
+            'question_type',
+            'text',
+            'options',
+            'points',
+            'order',
+            'explanation',
+        )
+
+        read_only_fields = (
+            'id',
+            'section',
+            'skill',
+            'question_type',
+            'text',
+            'options',
+            'points',
+            'order',
+            'explanation',
         )

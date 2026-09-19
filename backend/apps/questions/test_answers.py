@@ -36,6 +36,7 @@ class AnswerAPITests(APITestCase):
         self.section = ExamSection.objects.create(
             exam=self.exam,
             section_type='LISTENING',
+            status=ExamSection.Status.IN_PROGRESS,
         )
 
         self.question = Question.objects.create(

@@ -138,11 +138,13 @@ class ExamSection(models.Model):
         PROCESSING = 'PROCESSING', 'Processing'
         COMPLETED = 'COMPLETED', 'Completed'
 
+    # Используем обычные строки как ключи,
+    # потому что section_type хранится в модели как str.
     SECTION_ORDER = {
-        SectionType.LISTENING: 1,
-        SectionType.READING: 2,
-        SectionType.WRITING: 3,
-        SectionType.SPEAKING: 4,
+        'LISTENING': 1,
+        'READING': 2,
+        'WRITING': 3,
+        'SPEAKING': 4,
     }
 
     exam = models.ForeignKey(
@@ -212,8 +214,7 @@ class ExamSection(models.Model):
 
         previous_types = [
             section_type
-            for section_type, order
-            in self.SECTION_ORDER.items()
+            for section_type, order in self.SECTION_ORDER.items()
             if order < current_order
         ]
 

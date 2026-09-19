@@ -19,16 +19,20 @@ class QuestionAPITests(APITestCase):
             password='TestPassword123',
         )
 
-        self.client.force_authenticate(user=self.user)
+        self.client.force_authenticate(
+            user=self.user,
+        )
 
         self.exam = Exam.objects.create(
             user=self.user,
-            exam_type='FULL_MOCK',
+            exam_type=Exam.ExamType.FULL_MOCK,
+            status=Exam.Status.IN_PROGRESS,
         )
 
         self.section = ExamSection.objects.create(
             exam=self.exam,
-            section_type='LISTENING',
+            section_type=ExamSection.SectionType.LISTENING,
+            status=ExamSection.Status.IN_PROGRESS,
         )
 
     def test_create_question(self):
@@ -51,11 +55,16 @@ class QuestionAPITests(APITestCase):
             format='json',
         )
 
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(
+            response.status_code,
+            201,
+        )
+
         self.assertEqual(
             response.data['skill'],
             'LISTENING',
         )
+
         self.assertEqual(
             response.data['section'],
             self.section.id,
@@ -78,11 +87,28 @@ class QuestionAPITests(APITestCase):
         )
 
         response = self.client.get(
-            '/api/v1/questions/'
+            '/api/v1/questions/',
         )
 
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data), 1)
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        self.assertEqual(
+            len(response.data),
+            1,
+        )
+
+        self.assertEqual(
+            response.data[0]['section'],
+            self.section.id,
+        )
+
+        self.assertNotIn(
+            'correct_answer',
+            response.data[0],
+        )
 
     def test_cannot_create_question_for_another_users_section(self):
         other_user = User.objects.create_user(
@@ -93,12 +119,14 @@ class QuestionAPITests(APITestCase):
 
         other_exam = Exam.objects.create(
             user=other_user,
-            exam_type='FULL_MOCK',
+            exam_type=Exam.ExamType.FULL_MOCK,
+            status=Exam.Status.IN_PROGRESS,
         )
 
         other_section = ExamSection.objects.create(
             exam=other_exam,
-            section_type='READING',
+            section_type=ExamSection.SectionType.READING,
+            status=ExamSection.Status.IN_PROGRESS,
         )
 
         response = self.client.post(
@@ -114,13 +142,21 @@ class QuestionAPITests(APITestCase):
             format='json',
         )
 
-        self.assertEqual(response.status_code, 403)
-
-    def test_unauthenticated_access_denied(self):
-        self.client.force_authenticate(user=None)
-
-        response = self.client.get(
-            '/api/v1/questions/'
+        self.assertEqual(
+            response.status_code,
+            403,
         )
 
-        self.assertEqual(response.status_code, 401)
+    def test_unauthenticated_access_denied(self):
+        self.client.force_authenticate(
+            user=None,
+        )
+
+        response = self.client.get(
+            '/api/v1/questions/',
+        )
+
+        self.assertEqual(
+            response.status_code,
+            401,
+        )
