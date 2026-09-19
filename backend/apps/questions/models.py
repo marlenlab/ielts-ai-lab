@@ -1,5 +1,7 @@
 from django.db import models
 
+from apps.exams.models import ExamSection
+
 
 class Question(models.Model):
     class QuestionType(models.TextChoices):
@@ -18,6 +20,14 @@ class Question(models.Model):
     class Skill(models.TextChoices):
         LISTENING = 'LISTENING', 'Listening'
         READING = 'READING', 'Reading'
+
+    section = models.ForeignKey(
+        ExamSection,
+        on_delete=models.CASCADE,
+        related_name='questions',
+        null=True,
+        blank=True,
+    )
 
     skill = models.CharField(
         max_length=20,
@@ -62,4 +72,8 @@ class Question(models.Model):
         ordering = ['skill', 'order', 'id']
 
     def __str__(self):
-        return f'{self.skill} - {self.question_type} - {self.id}'
+        return (
+            f'{self.skill} - '
+            f'{self.question_type} - '
+            f'{self.id}'
+        )

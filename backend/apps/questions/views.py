@@ -1,4 +1,5 @@
 from rest_framework import generics, permissions
+from rest_framework.exceptions import PermissionDenied
 
 from .models import Question
 from .serializers import QuestionSerializer
@@ -14,3 +15,13 @@ class QuestionListCreateView(generics.ListCreateAPIView):
             'order',
             'id',
         )
+
+    def perform_create(self, serializer):
+        section = serializer.validated_data['section']
+
+        if section.exam.user != self.request.user:
+            raise PermissionDenied(
+                'You do not have permission to use this exam section.'
+            )
+
+        serializer.save()
