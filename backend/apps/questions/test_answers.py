@@ -3,24 +3,31 @@ from django.contrib.auth import get_user_model
 from rest_framework.test import APITestCase
 
 from apps.exams.models import Exam, ExamSection
-from apps.questions.answer import Answer
-from apps.questions.models import Question
+
+from .answer import Answer
+from .models import Question
+
 
 User = get_user_model()
 
 
 class AnswerAPITests(APITestCase):
+
     def setUp(self):
         self.user = User.objects.create_user(
             username='answertest',
             email='answertest@example.com',
             password='TestPassword123',
         )
-        self.client.force_authenticate(user=self.user)
+
+        self.client.force_authenticate(
+            user=self.user,
+        )
 
         self.exam = Exam.objects.create(
             user=self.user,
             exam_type='FULL_MOCK',
+            status='IN_PROGRESS',
         )
 
         self.section = ExamSection.objects.create(
@@ -33,7 +40,11 @@ class AnswerAPITests(APITestCase):
             skill='LISTENING',
             question_type='MULTIPLE_CHOICE',
             text='What time does the train leave?',
-            options=['8:00', '8:30', '9:00'],
+            options=[
+                '8:00',
+                '8:30',
+                '9:00',
+            ],
             correct_answer='8:30',
             points=1,
             order=1,
@@ -50,9 +61,19 @@ class AnswerAPITests(APITestCase):
             format='json',
         )
 
-        self.assertEqual(response.status_code, 201)
-        self.assertTrue(response.data['is_correct'])
-        self.assertEqual(response.data['points_earned'], 1)
+        self.assertEqual(
+            response.status_code,
+            201,
+        )
+
+        self.assertTrue(
+            response.data['is_correct'],
+        )
+
+        self.assertEqual(
+            response.data['points_earned'],
+            1,
+        )
 
     def test_create_incorrect_answer(self):
         response = self.client.post(
@@ -65,14 +86,25 @@ class AnswerAPITests(APITestCase):
             format='json',
         )
 
-        self.assertEqual(response.status_code, 201)
-        self.assertFalse(response.data['is_correct'])
-        self.assertEqual(response.data['points_earned'], 0)
+        self.assertEqual(
+            response.status_code,
+            201,
+        )
+
+        self.assertFalse(
+            response.data['is_correct'],
+        )
+
+        self.assertEqual(
+            response.data['points_earned'],
+            0,
+        )
 
     def test_cannot_answer_question_from_another_exam(self):
         other_exam = Exam.objects.create(
             user=self.user,
             exam_type='FULL_MOCK',
+            status='IN_PROGRESS',
         )
 
         other_section = ExamSection.objects.create(
@@ -100,13 +132,42 @@ class AnswerAPITests(APITestCase):
             format='json',
         )
 
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(
+            response.status_code,
+            403,
+        )
 
     def test_unauthenticated_access_denied(self):
-        self.client.force_authenticate(user=None)
+        self.client.force_authenticate(
+            user=None,
+        )
 
         response = self.client.get(
             '/api/v1/questions/answers/'
         )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(
+            response.status_code,
+            401,
+        )
+
+    def test_cannot_answer_not_started_exam(self):
+        self.exam.status = Exam.Status.NOT_STARTED
+        self.exam.save(
+            update_fields=['status'],
+        )
+
+        response = self.client.post(
+            '/api/v1/questions/answers/',
+            {
+                'exam': self.exam.id,
+                'question': self.question.id,
+                'answer': '8:30',
+            },
+            format='json',
+        )
+
+        self.assertEqual(
+            response.status_code,
+            403,
+        )

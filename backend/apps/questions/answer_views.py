@@ -12,7 +12,10 @@ class AnswerListCreateView(generics.ListCreateAPIView):
     def get_queryset(self):
         return Answer.objects.filter(
             exam__user=self.request.user,
-        ).order_by('question__order', 'id')
+        ).order_by(
+            'question__order',
+            'id',
+        )
 
     def perform_create(self, serializer):
         exam = serializer.validated_data['exam']
@@ -21,6 +24,11 @@ class AnswerListCreateView(generics.ListCreateAPIView):
         if exam.user != self.request.user:
             raise PermissionDenied(
                 'You do not have permission to answer this exam.'
+            )
+
+        if exam.status != exam.Status.IN_PROGRESS:
+            raise PermissionDenied(
+                'You can only answer an exam that is in progress.'
             )
 
         if question.section.exam_id != exam.id:
@@ -33,7 +41,11 @@ class AnswerListCreateView(generics.ListCreateAPIView):
             == question.correct_answer.strip().lower()
         )
 
-        points_earned = question.points if correct else 0
+        points_earned = (
+            question.points
+            if correct
+            else 0
+        )
 
         serializer.save(
             is_correct=correct,
