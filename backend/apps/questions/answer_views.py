@@ -31,7 +31,7 @@ class AnswerListCreateView(generics.ListCreateAPIView):
                 'You can only answer an exam that is in progress.'
             )
 
-        if exam.is_expired():
+        if exam.expire_if_needed():
             raise PermissionDenied(
                 'The exam time has expired.'
             )

@@ -4,6 +4,7 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
+
 class Exam(models.Model):
 
     class ExamType(models.TextChoices):
@@ -30,22 +31,10 @@ class Exam(models.Model):
         choices=ExamType.choices,
         default=ExamType.FULL_MOCK,
     )
+
     duration_minutes = models.PositiveIntegerField(
         default=165,
     )
-    def is_expired(self):
-        if self.status != self.Status.IN_PROGRESS:
-            return False
-
-        if not self.started_at:
-            return False
-
-        end_time = (
-            self.started_at
-            + timedelta(minutes=self.duration_minutes)
-        )
-
-        return timezone.now() >= end_time
 
     status = models.CharField(
         max_length=20,
@@ -75,6 +64,37 @@ class Exam(models.Model):
     updated_at = models.DateTimeField(
         auto_now=True,
     )
+
+    def is_expired(self):
+        if self.status != self.Status.IN_PROGRESS:
+            return False
+
+        if not self.started_at:
+            return False
+
+        end_time = (
+            self.started_at
+            + timedelta(minutes=self.duration_minutes)
+        )
+
+        return timezone.now() >= end_time
+
+    def expire_if_needed(self):
+        if not self.is_expired():
+            return False
+
+        self.status = self.Status.SUBMITTED
+        self.submitted_at = timezone.now()
+
+        self.save(
+            update_fields=[
+                'status',
+                'submitted_at',
+                'updated_at',
+            ],
+        )
+
+        return True
 
     def calculate_score(self):
         from apps.questions.answer import Answer

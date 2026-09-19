@@ -18,6 +18,14 @@ class ExamTimerView(generics.RetrieveAPIView):
     def retrieve(self, request, *args, **kwargs):
         exam = self.get_object()
 
+        if exam.expire_if_needed():
+            return Response({
+                'exam_id': exam.id,
+                'status': exam.status,
+                'remaining_seconds': 0,
+                'expired': True,
+            })
+
         if exam.status != Exam.Status.IN_PROGRESS:
             return Response({
                 'exam_id': exam.id,

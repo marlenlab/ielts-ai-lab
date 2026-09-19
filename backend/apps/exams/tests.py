@@ -1,4 +1,7 @@
+from datetime import timedelta
+
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 
 from rest_framework.test import APITestCase
 
@@ -51,6 +54,11 @@ class ExamAPITests(APITestCase):
         self.assertEqual(
             response.data['status'],
             'NOT_STARTED',
+        )
+
+        self.assertEqual(
+            response.data['duration_minutes'],
+            165,
         )
 
     def test_list_exams(self):
@@ -211,4 +219,122 @@ class ExamAPITests(APITestCase):
         self.assertEqual(
             response.data['result']['answered_questions'],
             2,
+        )
+
+    def test_timer_for_in_progress_exam(self):
+        self.exam.status = Exam.Status.IN_PROGRESS
+        self.exam.started_at = timezone.now()
+
+        self.exam.save(
+            update_fields=[
+                'status',
+                'started_at',
+            ],
+        )
+
+        response = self.client.get(
+            f'/api/v1/exams/{self.exam.id}/timer/'
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        self.assertEqual(
+            response.data['status'],
+            'IN_PROGRESS',
+        )
+
+        self.assertGreater(
+            response.data['remaining_seconds'],
+            0,
+        )
+
+        self.assertFalse(
+            response.data['expired'],
+        )
+
+    def test_expired_exam_is_automatically_submitted(self):
+        self.exam.status = Exam.Status.IN_PROGRESS
+        self.exam.started_at = (
+            timezone.now()
+            - timedelta(
+                minutes=self.exam.duration_minutes + 1,
+            )
+        )
+
+        self.exam.save(
+            update_fields=[
+                'status',
+                'started_at',
+            ],
+        )
+
+        response = self.client.get(
+            f'/api/v1/exams/{self.exam.id}/timer/'
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        self.assertEqual(
+            response.data['status'],
+            'SUBMITTED',
+        )
+
+        self.assertEqual(
+            response.data['remaining_seconds'],
+            0,
+        )
+
+        self.assertTrue(
+            response.data['expired'],
+        )
+
+        self.exam.refresh_from_db()
+
+        self.assertEqual(
+            self.exam.status,
+            Exam.Status.SUBMITTED,
+        )
+
+        self.assertIsNotNone(
+            self.exam.submitted_at,
+        )
+
+    def test_submitted_exam_timer_is_expired(self):
+        self.exam.status = Exam.Status.SUBMITTED
+        self.exam.submitted_at = timezone.now()
+
+        self.exam.save(
+            update_fields=[
+                'status',
+                'submitted_at',
+            ],
+        )
+
+        response = self.client.get(
+            f'/api/v1/exams/{self.exam.id}/timer/'
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        self.assertEqual(
+            response.data['status'],
+            'SUBMITTED',
+        )
+
+        self.assertEqual(
+            response.data['remaining_seconds'],
+            0,
+        )
+
+        self.assertTrue(
+            response.data['expired'],
         )
