@@ -84,4 +84,9 @@ urlpatterns = [
         'api/v1/analytics/',
         include('apps.analytics.urls'),
     ),
+
+    path(
+        'api/v1/ai/',
+        include('apps.ai.urls'),
+    ),
 ]
